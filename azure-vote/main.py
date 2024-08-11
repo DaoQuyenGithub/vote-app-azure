@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 handler = AzureLogHandler(connection_string='InstrumentationKey=4c2d207c-935e-417a-8022-f9b58efc4123')
 handler.setFormatter(logging.Formatter('%(traceId)s %(spanId)s %(message)s'))
 logger.addHandler(handler)
+logger.setLevel(logging.INFO)
 
 # Metrics
 # exporter = # TODO: Setup exporter
