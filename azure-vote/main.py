@@ -33,8 +33,8 @@ instrumentation_key = '4c2d207c-935e-417a-8022-f9b58efc4123'
 # logger = # TODO: Setup logger
 logger = logging.getLogger(__name__)
 handler = AzureLogHandler(connection_string='InstrumentationKey=4c2d207c-935e-417a-8022-f9b58efc4123')
-handler.setFormatter(logging.Formatter('%(traceId)s %(spanId)s %(message)s'))
 logger.addHandler(handler)
+logger.setLevel(logging.INFO)
 
 # Metrics
 # exporter = # TODO: Setup exporter
@@ -80,7 +80,21 @@ else:
     title = app.config['TITLE']
 
 # Redis Connection  
-r = redis.Redis()
+# r = redis.Redis()
+
+# Redis configurations
+redis_server = os.environ['REDIS']
+
+try:
+      if "REDIS_PWD" in os.environ:
+         r = redis.StrictRedis(host=redis_server,
+                           port=6379,
+                           password=os.environ['REDIS_PWD'])
+      else:
+         r = redis.Redis(redis_server)
+      r.ping()
+except redis.ConnectionError:
+    exit('Failed to connect to Redis, terminating.')
 
 # Change title to host name to demo NLB
 if app.config['SHOWHOST'] == "true":
@@ -98,13 +112,11 @@ def index():
         # Get current values
         vote1 = r.get(button1).decode('utf-8')
         # TODO: use tracer object to trace cat vote
-        with tracer.span(name="Cats Vote") as span:
-         print("Cats Vote")
+        tracer.span(name="Cats_vote")
 
         vote2 = r.get(button2).decode('utf-8')
         # TODO: use tracer object to trace dog vote
-        with tracer.span(name="Dogs Vote") as span:
-         print("Dogs Vote")
+        tracer.span(name="Dogs_vote")
 
         # Return index with values
         return render_template("index.html", value1=int(vote1), value2=int(vote2), button1=button1, button2=button2, title=title)
